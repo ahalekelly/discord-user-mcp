@@ -63,7 +63,7 @@ npm run build
 | `discord_find_message` | Find messages by author, content or date, with a channel scan fallback |
 | `discord_get_replies` | Replies to a given message |
 | `discord_pinned_messages` | Get pinned messages from a channel |
-| `discord_list_threads` | List archived threads in a server |
+| `discord_list_threads` | List archived threads in a channel |
 | `discord_list_dms` | List DM conversations |
 | `discord_user_info` | User profile with server roles |
 

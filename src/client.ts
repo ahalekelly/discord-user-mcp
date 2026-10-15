@@ -26,6 +26,13 @@ export class DiscordAPIError extends Error {
 // least MIN_GAP_MS apart, so the account never writes and reads at a human pace.
 const MIN_GAP_MS = 1000;
 
+// IDs are interpolated into URL paths, so anything but a snowflake could
+// redirect a request to another endpoint (e.g. "@me/billing").
+function id(value: string): string {
+  if (!/^\d{17,20}$/.test(value)) throw new Error(`Not a Discord ID: ${value}`);
+  return value;
+}
+
 export class DiscordClient {
   private baseUrl = "https://discord.com/api/v10";
   private chain: Promise<unknown> = Promise.resolve();
@@ -89,7 +96,7 @@ export class DiscordClient {
   }
 
   getUser(userId: string): Promise<User> {
-    return this.get(`/users/${userId}`);
+    return this.get(`/users/${id(userId)}`);
   }
 
   // ── Guilds ──
@@ -99,15 +106,15 @@ export class DiscordClient {
   }
 
   getGuild(guildId: string): Promise<GuildDetailed> {
-    return this.get(`/guilds/${guildId}?with_counts=true`);
+    return this.get(`/guilds/${id(guildId)}?with_counts=true`);
   }
 
   getGuildChannels(guildId: string): Promise<Channel[]> {
-    return this.get(`/guilds/${guildId}/channels`);
+    return this.get(`/guilds/${id(guildId)}/channels`);
   }
 
   getGuildMember(guildId: string, userId: string): Promise<GuildMember> {
-    return this.get(`/guilds/${guildId}/members/${userId}`);
+    return this.get(`/guilds/${id(guildId)}/members/${id(userId)}`);
   }
 
   searchGuildMembers(
@@ -116,14 +123,14 @@ export class DiscordClient {
     limit = 10,
   ): Promise<GuildMember[]> {
     return this.get(
-      `/guilds/${guildId}/members/search?query=${encodeURIComponent(query)}&limit=${limit}`,
+      `/guilds/${id(guildId)}/members/search?query=${encodeURIComponent(query)}&limit=${limit}`,
     );
   }
 
   // ── Channels ──
 
   getChannel(channelId: string): Promise<Channel> {
-    return this.get(`/channels/${channelId}`);
+    return this.get(`/channels/${id(channelId)}`);
   }
 
   // ── Messages ──
@@ -135,15 +142,15 @@ export class DiscordClient {
     if (query.after) params.set("after", query.after);
     if (query.around) params.set("around", query.around);
     const qs = params.toString();
-    return this.get(`/channels/${channelId}/messages${qs ? `?${qs}` : ""}`);
+    return this.get(`/channels/${id(channelId)}/messages${qs ? `?${qs}` : ""}`);
   }
 
   getMessage(channelId: string, messageId: string): Promise<Message> {
-    return this.get(`/channels/${channelId}/messages/${messageId}`);
+    return this.get(`/channels/${id(channelId)}/messages/${id(messageId)}`);
   }
 
   getPinnedMessages(channelId: string): Promise<Message[]> {
-    return this.get(`/channels/${channelId}/pins`);
+    return this.get(`/channels/${id(channelId)}/pins`);
   }
 
   // ── Search ──
@@ -158,7 +165,7 @@ export class DiscordClient {
     if (query.max_id) params.set("max_id", query.max_id);
     if (query.offset !== undefined) params.set("offset", String(query.offset));
     return this.get(
-      `/guilds/${guildId}/messages/search?${params.toString()}`,
+      `/guilds/${id(guildId)}/messages/search?${params.toString()}`,
     );
   }
 
@@ -166,13 +173,7 @@ export class DiscordClient {
 
   getArchivedPublicThreads(channelId: string): Promise<ThreadListResponse> {
     return this.get(
-      `/channels/${channelId}/threads/archived/public`,
-    );
-  }
-
-  getArchivedPrivateThreads(channelId: string): Promise<ThreadListResponse> {
-    return this.get(
-      `/channels/${channelId}/threads/archived/private`,
+      `/channels/${id(channelId)}/threads/archived/public`,
     );
   }
 
